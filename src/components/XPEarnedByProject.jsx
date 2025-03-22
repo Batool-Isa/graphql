@@ -5,7 +5,7 @@ const XP_Project_Chart = ({ data }) => {
     return <p className="text-center text-danger">No XP Data Available</p>;
   }
 
-  // Map project IDs to names (only "project" types)
+  // Map project IDs to names 
   const projectMap = data.object
     .filter(obj => obj.type === "project")
     .reduce((acc, obj) => {
@@ -26,28 +26,29 @@ const XP_Project_Chart = ({ data }) => {
   const chartData = Object.keys(xpByProject)
     .map(project => ({
       project,
-      xp: (xpByProject[project] / 1000).toFixed(2), // Convert XP to KB
+      xp: (xpByProject[project] / 1000).toFixed(2), 
     }))
-    .sort((a, b) => b.xp - a.xp); // Sort from highest to lowest XP
+    .sort((a, b) => b.xp - a.xp); 
 
   // Ensure Small XP Bars Are Visible
   const barWidth = 50;
   const barSpacing = 40;
   const numBars = chartData.length;
-  const width = Math.max(1800, numBars * (barWidth + barSpacing)); // Extended width
-  const height = 500;
+  const width = Math.max(1800, numBars * (barWidth + barSpacing)); 
+  const height = 800;
   const padding = 100;
   const maxXP = Math.max(...chartData.map(d => parseFloat(d.xp))) || 1;
   const minXP = Math.min(...chartData.map(d => parseFloat(d.xp))) || 0.01;
 
-  const minBarHeight = 15; // **Force small bars to be visible**
 
   const xScale = index => padding + index * (barWidth + barSpacing);
   
-  // **Fix: Prevent Invisible Bars Using Math.max()**
-  const yScale = xp => 
-    height - padding - Math.max((xp / maxXP) * (height - 2 * padding), minBarHeight);
-
+  const yScale = xp => {
+    const minBarHeight = 5; // Ensure a minimum bar height
+    return height - padding - Math.max((xp / maxXP) * (height - 2 * padding), minBarHeight);
+  };
+  
+ 
   // Color Palette
   const colors = ["#2C3930", "#3F4F44", "#A27B5C", "#DCD7C9"];
 
@@ -61,15 +62,16 @@ const XP_Project_Chart = ({ data }) => {
           <svg width={width} height={height} className="d-block mx-auto">
             {/* Bars */}
             {chartData.map((d, i) => (
-              <rect
-                key={i}
-                x={xScale(i)}
-                y={yScale(d.xp)}
-                width={barWidth}
-                height={height - padding - yScale(d.xp)}
-                fill={colors[i % colors.length]}
-                rx="5"
-              />
+            <rect
+            key={i}
+            x={xScale(i)}
+            y={yScale(d.xp)}
+            width={barWidth}
+            height={Math.max(height - padding - yScale(d.xp), 5)} // Ensure min height
+            fill={colors[i % colors.length]}
+            rx="5"
+          />
+          
             ))}
 
             {/* Labels Above Bars */}

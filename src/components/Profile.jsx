@@ -48,7 +48,16 @@ const Profile = () => {
   const { loading, error, data } = useQuery(GET_USER_DATA);
   const navigate = useNavigate();
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return;
+  <div
+    style={{
+      backgroundColor: "#DCD7C9",
+      minHeight: "100vh",
+      paddingBottom: "20px",
+    }}
+  >
+    <h1 class="text-center">Loading...</h1>
+  </div>;
   if (error) return <p>Error fetching data: {error.message}</p>;
 
   const handleLogout = () => {
@@ -68,10 +77,9 @@ const Profile = () => {
 
   const totalXp = data.transaction.reduce((sum, tx) => sum + tx.amount, 0);
   // Format the total XP
-  const totalXPFormatted = `${(totalXp / 1000)} KB`; // Assuming the total XP is in KB (divide by 1000 if in bytes)
+  const totalXPFormatted = `${totalXp / 1000} KB`; // Assuming the total XP is in KB (divide by 1000 if in bytes)
 
   console.log(totalXPFormatted);
-
 
   // Calculate Audit Statistics
   // Filter transactions for "up" and "down"
@@ -82,16 +90,22 @@ const Profile = () => {
   // const auditRatio = auditsReceived > 0 ? (auditsDone / auditsReceived).toFixed(2) : "N/A";
 
   // Process XP by Project
-  const resultArr = data.progress.map(progress => ({
+  const resultArr = data.progress.map((progress) => ({
     projectName: progress.object.name,
     xp: data.transaction
-      .filter(tx => tx.objectId === progress.objectId)
+      .filter((tx) => tx.objectId === progress.objectId)
       .reduce((sum, tx) => sum + tx.amount, 0),
     grade: progress.grade,
   }));
 
   return (
-    <div style={{ backgroundColor: "#DCD7C9", minHeight: "100vh", paddingBottom: "20px" }}>
+    <div
+      style={{
+        backgroundColor: "#DCD7C9",
+        minHeight: "100vh",
+        paddingBottom: "20px",
+      }}
+    >
       {/* Full-Width Header */}
       <ProfileHeader data={data} onLogout={handleLogout} />
 
@@ -100,37 +114,53 @@ const Profile = () => {
         <h1 className="fw-bold" style={{ fontSize: "3rem", color: "#2C3930" }}>
           Welcome,
           <span style={{ color: "#A27B5C" }}>
-            {" "} {firstName} {lastName}!
+            {" "}
+            {firstName} {lastName}!
           </span>
         </h1>
       </div>
 
       {/* Profile Information */}
       <div className="container mt-4">
-        <div className="card shadow-lg p-4 text-white" style={{ backgroundColor: "#2C3930", borderRadius: "15px" }}>
+        <div
+          className="card shadow-lg p-4 text-white"
+          style={{ backgroundColor: "#2C3930", borderRadius: "15px" }}
+        >
           <div className="row">
             {/* Row 1 - Three Columns */}
             <div className="col-md-4 mb-3">
-              <p><strong>ID:</strong> {userId}</p>
+              <p>
+                <strong>ID:</strong> {userId}
+              </p>
             </div>
             <div className="col-md-4 mb-3">
-              <p><strong>First Name:</strong> {firstName}</p>
+              <p>
+                <strong>First Name:</strong> {firstName}
+              </p>
             </div>
             <div className="col-md-4 mb-3">
-              <p><strong>Last Name:</strong> {lastName}</p>
+              <p>
+                <strong>Last Name:</strong> {lastName}
+              </p>
             </div>
           </div>
 
           <div className="row">
             {/* Row 2 - Three Columns */}
             <div className="col-md-4 mb-3">
-              <p><strong>Email:</strong> {email}</p>
+              <p>
+                <strong>Email:</strong> {email}
+              </p>
             </div>
             <div className="col-md-4 mb-3">
-              <p><strong>Campus:</strong> {campus}</p>
+              <p>
+                <strong>Campus:</strong> {campus}
+              </p>
             </div>
             <div className="col-md-4 mb-3">
-              <p><strong>Username:</strong> {username}</p>
+              <p>
+                <strong>Username:</strong> {username}
+              </p>
             </div>
           </div>
         </div>
@@ -141,23 +171,29 @@ const Profile = () => {
         <div className="row">
           {/* XP Statistics */}
           <div className="col-md-6">
-            <div className="card p-4 shadow-sm" style={{ backgroundColor: "#A27B5C", borderRadius: "10px" }}>
+            <div
+              className="card p-4 shadow-sm"
+              style={{ backgroundColor: "#A27B5C", borderRadius: "10px" }}
+            >
               <h4 className="text-white text-center">Total XP</h4>
-              <p className="text-center fw-bold" style={{ fontSize: "1.5rem" }}>{totalXPFormatted}</p>
+              <p className="text-center fw-bold" style={{ fontSize: "1.5rem" }}>
+                {totalXPFormatted}
+              </p>
             </div>
           </div>
 
           <div className=" container">
             <TransactionHistory data={data} />
           </div>
-
-        
         </div>
       </div>
 
       {/* XP Grades Breakdown */}
       <div className="container mt-4">
-        <XPGrades resultArr={resultArr} allProjectNames={data.progress.map(p => p.object.name)} />
+        <XPGrades
+          resultArr={resultArr}
+          allProjectNames={data.progress.map((p) => p.object.name)}
+        />
       </div>
 
       {/* XP & Project Analysis */}
@@ -165,12 +201,7 @@ const Profile = () => {
         <XPChart data={data.transaction} />
 
         <XPEarnedByProject data={data} />
-
-
       </div>
-
-
-
     </div>
   );
 };
