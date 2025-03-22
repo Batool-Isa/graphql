@@ -48,16 +48,21 @@ const Profile = () => {
   const { loading, error, data } = useQuery(GET_USER_DATA);
   const navigate = useNavigate();
 
-  if (loading) return;
-  <div
-    style={{
-      backgroundColor: "#DCD7C9",
-      minHeight: "100vh",
-      paddingBottom: "20px",
-    }}
-  >
-    <h1 class="text-center">Loading...</h1>
-  </div>;
+  if (loading) {
+    return (
+      <div
+        style={{
+          backgroundColor: "#DCD7C9",
+          minHeight: "100vh",
+          paddingBottom: "20px",
+          justifyContent: "center",
+        }}
+      >
+        <h1 className="text-center">Loading...</h1>
+      </div>
+    );
+  }
+  
   if (error) return <p>Error fetching data: {error.message}</p>;
 
   const handleLogout = () => {
@@ -76,18 +81,11 @@ const Profile = () => {
   const username = user.login || "user";
 
   const totalXp = data.transaction.reduce((sum, tx) => sum + tx.amount, 0);
+ 
   // Format the total XP
-  const totalXPFormatted = `${totalXp / 1000} KB`; // Assuming the total XP is in KB (divide by 1000 if in bytes)
+  const totalXPFormatted = `${totalXp / 1000} KB`; 
 
   console.log(totalXPFormatted);
-
-  // Calculate Audit Statistics
-  // Filter transactions for "up" and "down"
-  // const auditsDone = data.transaction.filter(tx => tx.type === "up").length;
-  // const auditsReceived = data.transaction.filter(tx => tx.type === "down").length;
-
-  // Prevent division by zero
-  // const auditRatio = auditsReceived > 0 ? (auditsDone / auditsReceived).toFixed(2) : "N/A";
 
   // Process XP by Project
   const resultArr = data.progress.map((progress) => ({
