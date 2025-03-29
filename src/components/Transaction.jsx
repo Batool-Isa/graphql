@@ -7,18 +7,15 @@ const TransactionHistory = ({ data }) => {
     return <p>No transactions available</p>;
   }
 
-  // Create a mapping of objectId -> project object
   const projectMap = data.object.reduce((acc, obj) => {
-    acc[obj.id] = obj; // Store the full object here
+    acc[obj.id] = obj; 
     return acc;
   }, {});
 
-  // Filter transactions to include only project-related XP transactions
   const projectTransactions = data.transaction
-    .filter(tx => projectMap[tx.objectId]) // Ensure objectId is linked to a project
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by latest date
+    .filter(tx => projectMap[tx.objectId]) 
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); 
 
-  // Get the transactions to show based on whether "showAll" is true or false
   const transactionsToShow = showAll ? projectTransactions : projectTransactions.slice(0, 5);
 
   return (

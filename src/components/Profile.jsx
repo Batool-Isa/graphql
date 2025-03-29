@@ -2,9 +2,7 @@ import { useQuery, gql } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import XPChart from "./XPChart";
-import XPEarnedByProject from "./XPEarnedByProject";
-import XPGrades from "./XPGrades";
-import TransactionHistory from "./Transaction";
+import SkillChart from "./SkillChart";
 
 const GET_USER_DATA = gql`
   query {
@@ -13,6 +11,9 @@ const GET_USER_DATA = gql`
       login
       attrs
       campus
+      totalUp
+      totalDown
+      auditRatio
     }
     transaction(where: { type: { _eq: "xp" } }) {
       objectId
@@ -44,25 +45,52 @@ const GET_USER_DATA = gql`
   }
 `;
 
+export const GET_USER_SKILLS = gql`
+  query GetUserSkills {
+    user {
+      transactions(
+        order_by: [{ type: desc }, { amount: desc }]
+        distinct_on: [type]
+        where: {
+          type: {
+            _in: [
+              "skill_js"
+              "skill_go"
+              "skill_html"
+              "skill_prog"
+              "skill_front-end"
+              "skill_back-end"
+            ]
+          }
+        }
+      ) {
+        type
+        amount
+      }
+    }
+  }
+`;
+
 const Profile = () => {
   const { loading, error, data } = useQuery(GET_USER_DATA);
   const navigate = useNavigate();
-
   if (loading) {
     return (
       <div
+        className="d-flex justify-content-center align-items-center"
         style={{
           backgroundColor: "#DCD7C9",
           minHeight: "100vh",
-          paddingBottom: "20px",
-          justifyContent: "center",
         }}
       >
-        <h1 className="text-center">Loading...</h1>
+        <div className="spinner-border text-dark" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
       </div>
     );
   }
   
+
   if (error) return <p>Error fetching data: {error.message}</p>;
 
   const handleLogout = () => {
@@ -80,21 +108,9 @@ const Profile = () => {
   const campus = user.campus || "N/A";
   const username = user.login || "user";
 
-  const totalXp = data.transaction.reduce((sum, tx) => sum + tx.amount, 0);
- 
-  // Format the total XP
-  const totalXPFormatted = `${totalXp / 1000} KB`; 
-
-  console.log(totalXPFormatted);
-
-  // Process XP by Project
-  const resultArr = data.progress.map((progress) => ({
-    projectName: progress.object.name,
-    xp: data.transaction
-      .filter((tx) => tx.objectId === progress.objectId)
-      .reduce((sum, tx) => sum + tx.amount, 0),
-    grade: progress.grade,
-  }));
+  const auditRatio = parseFloat(user.auditRatio).toFixed(2);
+  const auditsDone = `${(user.totalUp / 1000000).toFixed(2)} MB`;
+  const auditsReceived = `${(user.totalDown / 1000000).toFixed(2)} MB`;
 
   return (
     <div
@@ -104,10 +120,8 @@ const Profile = () => {
         paddingBottom: "20px",
       }}
     >
-      {/* Full-Width Header */}
       <ProfileHeader data={data} onLogout={handleLogout} />
 
-      {/* Welcome Message */}
       <div className="container text-center mt-5">
         <h1 className="fw-bold" style={{ fontSize: "3rem", color: "#2C3930" }}>
           Welcome,
@@ -164,41 +178,77 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* XP & Audit Statistics */}
-      <div className="container mt-5">
-        <div className="row">
-          {/* XP Statistics */}
-          <div className="col-md-6">
-            <div
-              className="card p-4 shadow-sm"
-              style={{ backgroundColor: "#A27B5C", borderRadius: "10px" }}
-            >
-              <h4 className="text-white text-center">Total XP</h4>
-              <p className="text-center fw-bold" style={{ fontSize: "1.5rem" }}>
-                {totalXPFormatted}
-              </p>
+      <div className="container mt-3">
+        <div
+          className="card shadow-lg p-4"
+          style={{ backgroundColor: "#F5F5F5", borderRadius: "15px" }}
+        >
+          <h3 className="fw-bold text-center mb-4">XP & Grades Overview</h3>
+          <div className="row text-center">
+            <div className="col-md-4">
+              <div className="p-3 border rounded bg-light">
+                <h5 className="text-success">Audit Ratio</h5>
+                <p className="text-dark fw-semibold">{auditRatio}</p>
+              </div>
             </div>
-          </div>
-
-          <div className=" container">
-            <TransactionHistory data={data} />
+            <div className="col-md-4">
+              <div className="p-3 border rounded bg-light">
+                <h5 className="text-success">Audit Done</h5>
+                <p className="text-dark fw-semibold">{auditsDone}</p>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="p-3 border rounded bg-light">
+                <h5 className="text-danger">Audit Recieved</h5>
+                <p className="text-dark fw-semibold">{auditsReceived}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* XP Grades Breakdown */}
       <div className="container mt-4">
-        <XPGrades
-          resultArr={resultArr}
-          allProjectNames={data.progress.map((p) => p.object.name)}
-        />
+        <div
+          className="card shadow-lg p-4"
+          style={{ backgroundColor: "#F5F5F5", borderRadius: "15px" }}
+        >
+          <h3 className="fw-bold text-center mb-3">Transactions History</h3>
+          <div className="table-responsive">
+            <table className="table table-striped table-bordered">
+              <thead className="">
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>XP Gained (KB)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.transaction
+                  .slice()
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .slice(0, 5)
+                  .map((item, index) => {
+                    const object = data.object.find(
+                      (obj) => obj.id === item.objectId
+                    );
+                    return (
+                      <tr key={index}>
+                        <td>{object?.name || "N/A"}</td>
+                        <td>{object?.type || "N/A"}</td>
+                        <td>{(item.amount / 1000).toFixed(2)} KB</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      {/* XP & Project Analysis */}
+      <SkillChart />
+
       <div className="container mt-4">
         <XPChart data={data.transaction} />
-
-        <XPEarnedByProject data={data} />
       </div>
     </div>
   );
