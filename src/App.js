@@ -25,7 +25,7 @@ function App() {
 
   return (
     <ApolloProvider client={client}>
-      <Router>
+      <Router basename="/graphql">
         <Routes>
         <Route path="/" element={isAuthenticated ? <Navigate to="/profile" /> : <Login onLogin={handleLogin} />} />
 
